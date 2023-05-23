@@ -104,7 +104,7 @@ public class SP360 extends Spider {
             if (!pg.equals("1")) {
                 // 第二页开始
                 cateUrl = "https://api.web.360kan.com/v1/filter/list?catid=" + tid + "&" + sb + "&size=35&pageno=" + pg + "&callback=";
-                referer = "https://www.360kan.com/dianying/list?" + sb + "&pageno=2";
+                referer = "https://www.360kan.com/" + categoryClassId + "/list?" + sb + "&pageno=" + pg;
             }
             String content = getContent(cateUrl, referer);
             JSONArray videos = new JSONArray();
@@ -116,8 +116,8 @@ public class SP360 extends Spider {
                 String detailReferer = "https://www.360kan.com/" + detailClassId + "/" + id + ".html";
                 JSONObject detailObj = new JSONObject().put("detailUrl", vid).put("detailReferer", detailReferer);
                 String name = item.optString("title");
-                // String pic = "http:" + item.optString("cdncover");
-                String pic = "http:" + item.optString("cover");
+                String pic = "http:" + item.optString("cdncover");
+                // String pic = "http:" + item.optString("cover");
                 String remark = item.optString("pubdate");
 
                 JSONObject vod = new JSONObject()
