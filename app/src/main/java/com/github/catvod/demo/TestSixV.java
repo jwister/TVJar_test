@@ -24,6 +24,9 @@ public class TestSixV {
 //        ids.add("https://www.66ss.org/xijupian/20346.html");
 //        ids.add("https://www.66ss.org/xijupian/20531.html");
         ids.add("https://www.66ss.org/xijupian/20620.html");
+        // ids.add("https://www.66s.cc/dongzuopian/21174.html");
+        // ids.add("https://www.66s.cc/donghuapian/21001.html");
+        ids.add("https://www.66s.cc/donghuapian/20991.html");
         String s = sixV.detailContent(ids);
         System.out.println(s);
 
