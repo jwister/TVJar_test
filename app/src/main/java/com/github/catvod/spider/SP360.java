@@ -1,5 +1,6 @@
 package com.github.catvod.spider;
 
+import android.text.TextUtils;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.SSLSocketFactoryCompat;
 import okhttp3.OkHttpClient;
@@ -10,10 +11,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author zhixc
@@ -22,6 +20,8 @@ import java.util.List;
 public class SP360 extends Spider {
 
     private final String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:102.0) Gecko/20100101 Firefox/102.0";
+
+    private final Map<String, Boolean> hasNextPageMap = new HashMap<>();
 
     @Override
     public String homeContent(boolean filter) {
@@ -65,6 +65,13 @@ public class SP360 extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
+            if (pg.equals("1")) {
+                hasNextPageMap.put(tid, true);
+            }
+            if (hasNextPageMap.containsKey(tid)) {
+                Boolean hasNextPage = hasNextPageMap.get(tid);
+                if (!hasNextPage) return "";
+            }
             HashMap<String, String> ext = new HashMap<>();
             if (extend != null && extend.size() > 0) {
                 ext.putAll(extend);
@@ -111,6 +118,10 @@ public class SP360 extends Spider {
             String content = getWebContent(cateUrl, referer);
             JSONArray videos = new JSONArray();
             JSONArray items = new JSONObject(content).optJSONObject("data").optJSONArray("movies");
+            if (items.length() == 0) {
+                hasNextPageMap.put(tid, false);
+                return "";
+            }
             for (int i = 0; i < items.length(); i++) {
                 JSONObject item = items.optJSONObject(i);
                 String id = item.optString("id");
@@ -130,18 +141,14 @@ public class SP360 extends Spider {
                 videos.put(vod);
             }
 
-            int total = new JSONObject(content).optJSONObject("data").optInt("total");
-            int count = total % 35 == 0 ? (total / 35) : (total / 35 + 1);
 
             JSONObject result = new JSONObject()
-                    .put("page", Integer.parseInt(pg)) // 当前第几页
-                    .put("pagecount", count) // 共有多少页
-                    .put("limit", 35) // 每页共有多少条数据
-                    .put("total", total) // 总记录数
+                    .put("pagecount", 999)
                     .put("list", videos);
             return result.toString();
         } catch (Exception e) {
             e.printStackTrace();
+            hasNextPageMap.put(tid, false);
         }
         return "";
     }
@@ -220,7 +227,7 @@ public class SP360 extends Spider {
                     }
                     if (vodItems.size() > 0) {
                         playFrom.add(site);
-                        playUrl.add(String.join("#", vodItems));
+                        playUrl.add(TextUtils.join("#", vodItems));
                     }
                 }
             } else if (isVarietyShow) {
@@ -248,7 +255,7 @@ public class SP360 extends Spider {
                         }
                         if (vodItems.size() > 0) {
                             playFrom.add(site);
-                            playUrl.add(String.join("#", vodItems));
+                            playUrl.add(TextUtils.join("#", vodItems));
                         }
                     }
                 }
@@ -256,12 +263,12 @@ public class SP360 extends Spider {
                 // 电影的默认处理
                 for (int i = 0; i < playLinkSites.length(); i++) {
                     String site = String.valueOf(playLinkSites.get(i));
-                    // if (site.contains("douyin") || site.contains("xigua")) continue;
+                    if (site.contains("douyin") || site.contains("xigua")) continue;
                     String defaultUrl = playLinksDetail.optJSONObject(site).optString("default_url");
                     List<String> vodItems = new ArrayList<>();
                     vodItems.add(name + "$" + defaultUrl);
                     playFrom.add(site);
-                    playUrl.add(String.join("#", vodItems));
+                    playUrl.add(TextUtils.join("#", vodItems));
                 }
             }
 
@@ -286,8 +293,8 @@ public class SP360 extends Spider {
                     .put("vod_actor", actor) // 主演 选填
                     .put("vod_director", director) // 导演 选填
                     .put("vod_content", description) // 简介 选填
-                    .put("vod_play_from", String.join("$$$", playFrom))
-                    .put("vod_play_url", String.join("$$$", playUrl));
+                    .put("vod_play_from", TextUtils.join("$$$", playFrom))
+                    .put("vod_play_url", TextUtils.join("$$$", playUrl));
 
             JSONArray listInfo = new JSONArray()
                     .put(info);
